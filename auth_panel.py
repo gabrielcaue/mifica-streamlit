@@ -46,9 +46,8 @@ def render():
     st.markdown('<div class="login-box">', unsafe_allow_html=True)
     st.markdown("<h3>🔐 Painel de Autenticação</h3>", unsafe_allow_html=True)
 
-    # Campos funcionais dentro da caixa
-    email = st.text_input("Email", placeholder="Digite seu email", label_visibility="visible")
-    senha = st.text_input("Senha", type="password", placeholder="Digite sua senha", label_visibility="visible")
+    email = st.text_input("Email", placeholder="Digite seu email")
+    senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
 
     if st.button("Entrar"):
         with st.spinner("Autenticando..."):
@@ -72,6 +71,42 @@ def render():
             st.markdown(f"📧 **Email:** {st.session_state['usuario']['email']}")
         else:
             st.error("Credenciais inválidas ou erro no servidor.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Caixa de cadastro de administrador
+    st.markdown('<div class="login-box">', unsafe_allow_html=True)
+    st.markdown("<h3>🛡️ Cadastro de Administrador</h3>", unsafe_allow_html=True)
+
+    nome = st.text_input("Nome completo")
+    email_admin = st.text_input("Email para cadastro")
+    senha_admin = st.text_input("Senha de acesso", type="password")
+    telefone = st.text_input("Telefone")
+    data_nascimento = st.date_input("Data de nascimento").strftime("%Y-%m-%d")
+    senha_acesso = st.text_input("Senha especial para cadastro", type="password")
+
+    if st.button("Cadastrar Administrador"):
+        payload = {
+            "nome": nome,
+            "email": email_admin,
+            "senha": senha_admin,
+            "telefone": telefone,
+            "dataNascimento": data_nascimento,
+            "role": "ADMIN",
+            "senhaAcesso": senha_acesso
+        }
+
+        try:
+            r = requests.post("http://localhost:8080/api/usuarios/cadastro-admin", json=payload)
+
+            if r.status_code == 200:
+                st.success("Administrador cadastrado com sucesso!")
+            elif r.status_code == 403:
+                st.error(f"Erro 403: {r.text}")
+            else:
+                st.error(f"Erro {r.status_code}: {r.text}")
+        except Exception as e:
+            st.error(f"Erro de conexão: {e}")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
