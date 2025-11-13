@@ -38,9 +38,11 @@ streamlit run main.py
 🔐 Acesso ao painel administrativo
 O painel Streamlit é acessível apenas para usuários com perfil de administrador (role: "admin"). Após login no frontend, o botão “🧠 Painel de Inteligência Mifica” estará disponível para admins e redirecionará para o painel em http://localhost:8501.
 
-📌 Próximos passos
-[ ] Finalizar estilização do painel Streamlit
+### Login
 
+<img width="1916" height="891" alt="Image" src="https://github.com/user-attachments/assets/d53f7c78-b5f1-4876-b912-c26c7c0d19f8" />
+
+📌 Próximos passos
 [ ] Implementar controle de reputação via blockchain
 
 [ ] Criar deploy com Docker ou GCP
