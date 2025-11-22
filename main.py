@@ -1,86 +1,67 @@
 import streamlit as st
-import requests
-import jwt
+import mysql.connector
 import os
 
-def render():
-    # Estilo visual aplicado diretamente aos componentes
-    st.markdown(
-        """
-        <style>
-        .main {
-            background-color: #0E1117;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            color: #00C896;
-            text-align: center;
-        }
-        div[data-testid="stTextInput"] > div > input {
-            background-color: #2A2D35 !important;
-            color: #FAFAFA !important;
-            border-radius: 8px !important;
-            padding: 10px !important;
-            border: none !important;
-            font-size: 0.95rem !important;
-        }
-        button[kind="primary"] {
-            background-color: #00C896 !important;
-            color: white !important;
-            border-radius: 8px !important;
-            font-weight: bold !important;
-            padding: 0.6rem 1.2rem !important;
-            margin-top: 1rem;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+# Configuração inicial da página
+st.set_page_config(
+    page_title="Painel Administrativo Mifica",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-    # Logotipo e frase de impacto
-    logo_path = os.path.join("assets", "logo.png")
-    if os.path.exists(logo_path):
-        st.image(logo_path, width=100)
-    else:
-        st.warning("⚠️ Logo não encontrada em 'assets/logo.png'")
+# Estilo visual
+st.markdown(
+    """
+    <style>
+    section.main > div {
+        background-color: #0E1117;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        color: #00C896;
+        text-align: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-    st.markdown("## Mifica — Inteligência Modular para Software")
-    st.markdown("### 🔐 Painel de Autenticação JWT")
+# Logotipo
+try:
+    st.sidebar.image("assets/logo.png", width=120)
+except Exception as e:
+    st.sidebar.empty()  # Evita renderização flutuante
 
-    # Inicializa o estado da sessão
-    if "token" not in st.session_state:
-        st.session_state["token"] = None
-    if "usuario" not in st.session_state:
-        st.session_state["usuario"] = None
+# Menu lateral padrão (☰)
+st.sidebar.title("Menu")
+menu = st.sidebar.radio("Navegação", ["Dashboard", "Usuários", "Configurações"])
 
-    # Campos de entrada
-    email = st.text_input("Email", placeholder="Digite seu email")
-    senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
+# Conexão com MySQL
+conn = mysql.connector.connect(
+    host="localhost",
+    user="seu_usuario",
+    password="sua_senha",
+    database="mifica_db"
+)
+cursor = conn.cursor()
 
-    # Botão de login
-    if st.button("Entrar"):
-        with st.spinner("Autenticando..."):
-            try:
-                r = requests.post("http://localhost:8080/api/auth/login", json={"email": email, "senha": senha})
-                if r.status_code == 200:
-                    token = r.json()["token"]
-                    st.session_state["token"] = token
+# Renderização das páginas
+if menu == "Dashboard":
+    st.title("📊 Dashboard Administrativo")
+    cursor.execute("SELECT COUNT(*) FROM usuarios")
+    total_usuarios = cursor.fetchone()[0]
+    st.metric("Usuários cadastrados", total_usuarios)
 
-                    decoded = jwt.decode(token, options={"verify_signature": False})
-                    st.session_state["usuario"] = {
-                        "nome": decoded.get("nome", "Usuário"),
-                        "email": decoded.get("email", decoded.get("sub", "")),
-                        "role": decoded.get("role", "")
-                    }
+elif menu == "Usuários":
+    st.title("👥 Gerenciamento de Usuários")
+    cursor.execute("SELECT nome, email, role FROM usuarios LIMIT 10")
+    rows = cursor.fetchall()
+    for nome, email, role in rows:
+        st.write(f"**{nome}** — {email} ({role})")
 
-                    st.toast("Login realizado com sucesso!", icon="✅")
-                    st.success("Login realizado com sucesso!")
-                    st.text_area("Token JWT", token[:10] + "...", height=100)
-                    st.markdown(f"👤 **Usuário:** {st.session_state['usuario']['nome']}")
-                    st.markdown(f"📧 **Email:** {st.session_state['usuario']['email']}")
-                else:
-                    st.error("Credenciais inválidas ou erro no servidor.")
-            except Exception as e:
-                st.error(f"Erro ao conectar com o backend: {e}")
+elif menu == "Configurações":
+    st.title("⚙️ Configurações do Sistema")
+    st.info("Aqui você pode ajustar parâmetros do painel e da aplicação.")
 
-if __name__ == "__main__":
-    render()
+# Fecha conexão
+cursor.close()
+conn.close()
