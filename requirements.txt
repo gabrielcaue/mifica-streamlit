@@ -3,3 +3,5 @@ requests
 PyJWT
 Pillow
 plotly
+pandas
+numpy
